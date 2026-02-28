@@ -48,23 +48,18 @@ io.on("connection", (socket) => {
 // app.use(cors());
 
 // With:
-const allowedOrigins = [
-  "https://placify-ii6b4536l-hiyasanghvi1806-2077s-projects.vercel.app", // frontend
-  "http://localhost:5173", // local dev
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["*"];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like Postman)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = "CORS policy: This origin is not allowed";
-        return callback(new Error(msg), false);
+      if (!origin) return callback(null, true); // Postman / server requests
+      if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error("CORS policy: This origin is not allowed"), false);
     },
-    credentials: true, // allow cookies/headers
+    credentials: true,
   })
 );
 app.use(express.json());
