@@ -1,8 +1,9 @@
 import axios from "axios";
 
 // Use the environment variable from Vite
+// client/src/api/api.js
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // instead of localhost
+  baseURL: "https://placify-ooic.onrender.com/api", // deployed backend
 });
 
 api.interceptors.request.use((req) => {
