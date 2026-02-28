@@ -52,13 +52,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["*"];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Postman / server requests
-      if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("CORS policy: This origin is not allowed"), false);
-    },
+    origin: "*", // ⚠️ allows any domain
     credentials: true,
   })
 );
