@@ -44,7 +44,29 @@ io.on("connection", (socket) => {
 /* ==============================
    MIDDLEWARE
 ============================== */
-app.use(cors());
+// Replace this
+// app.use(cors());
+
+// With:
+const allowedOrigins = [
+  "https://placify-ii6b4536l-hiyasanghvi1806-2077s-projects.vercel.app", // frontend
+  "http://localhost:5173", // local dev
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = "CORS policy: This origin is not allowed";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true, // allow cookies/headers
+  })
+);
 app.use(express.json());
 
 /* ==============================
