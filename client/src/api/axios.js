@@ -1,7 +1,8 @@
 import axios from "axios";
 
+// Use the environment variable from Vite
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL, // instead of localhost
 });
 
 api.interceptors.request.use((req) => {
