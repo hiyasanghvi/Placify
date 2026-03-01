@@ -9,8 +9,8 @@ const OAResult = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/api/oa/result/${id}`, {
+    axios.get(
+  `https://placify-ooic.onrender.com/api/oa/result/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => setResult(res.data))
