@@ -21,9 +21,9 @@ const ATSPage = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5000/api/ats/analyze",
-        formData
-      );
+  "https://placify-ooic.onrender.com/api/ats/analyze",
+  formData
+);
 
       setResult(res.data);
     } catch (err) {
