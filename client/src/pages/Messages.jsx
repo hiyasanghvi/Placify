@@ -4,7 +4,10 @@ import MessageInput from "../components/MessageInput";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 
-const socket = io("https://placify-ooic.onrender.com");
+const socket = io("https://placify-ooic.onrender.com", {
+  transports: ["websocket"],
+  withCredentials: true
+});;
 
 const Messages = () => {
   const location = useLocation();
