@@ -14,7 +14,7 @@ const OA = () => {
   const startOA = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/oa/questions?topic=${topic}&difficulty=${difficulty}`,
+  `https://placify-ooic.onrender.com/api/oa/questions?topic=${topic}&difficulty=${difficulty}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -64,7 +64,7 @@ const OA = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/oa/submit",
+  "https://placify-ooic.onrender.com/api/oa/submit",
         payload,
         {
           headers: { Authorization: `Bearer ${token}` }
