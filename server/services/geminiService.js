@@ -8,7 +8,7 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// ✅ FIXED MODEL (IMPORTANT)
+// ✅ FIXED MODEL
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-pro",
 });
@@ -26,9 +26,9 @@ Resume:
 ${resumeText}
 
 Rules:
-- Only numbered list
-- No duplicates
-- Mix technical + project + problem solving
+- Numbered list only
+- No repetition
+- Mix technical, project, and problem solving
 `;
 
     const result = await model.generateContent(prompt);
@@ -42,7 +42,7 @@ Rules:
 3. What challenges did you face?
 4. How do you optimize APIs?
 5. Explain your role in team projects
-6. How do you debug issues?
+6. How do you handle debugging?
 7. What is your strongest project?
 8. Why should we hire you?
 `;
