@@ -2,7 +2,9 @@ import express from "express";
 import multer from "multer";
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse-debugging-disabled";
-
+import {
+  generateQuestions
+} from "../services/geminiService.js";
 const router = express.Router();
 
 const storage = multer.memoryStorage();
@@ -60,6 +62,16 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     }
 
     const resumeText = text.toLowerCase();
+    const aiQuestionsRaw =
+  await generateQuestions(text, role);
+console.log(
+  "AI QUESTIONS RAW:",
+  aiQuestionsRaw
+);
+const aiQuestions =
+  aiQuestionsRaw
+    .split("\n")
+    .filter((q) => q.trim() !== "");
     const keywords = jobKeywords[role.toLowerCase()];
 
     /* ===================================
@@ -215,6 +227,7 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     res.json({
       overallScore,
       level,
+      aiQuestions,
       breakdown: {
         keywords: keywordScore,
         structure: structureScore,
