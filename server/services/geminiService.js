@@ -4,11 +4,35 @@ console.log("GEMINI KEY EXISTS:", !!process.env.GEMINI_API_KEY);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ✅ CORRECT MODEL (IMPORTANT)
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-});
+/* ==============================
+   MODEL LOADER WITH FALLBACK
+============================== */
+const getModel = () => {
+  try {
+    // ✅ Primary model (best balance)
+    return genAI.getGenerativeModel({
+      model: "gemini-1.5-flash-latest",
+    });
+  } catch (err1) {
+    console.error("Flash model failed, switching to pro...");
 
+    try {
+      // 🔁 Backup model
+      return genAI.getGenerativeModel({
+        model: "gemini-1.5-pro",
+      });
+    } catch (err2) {
+      console.error("All Gemini models failed!");
+      throw new Error("No Gemini model available");
+    }
+  }
+};
+
+const model = getModel();
+
+/* ==============================
+   MAIN FUNCTION
+============================== */
 export const generateQuestions = async (resumeText, role) => {
   try {
     const prompt = `
@@ -30,12 +54,14 @@ ${resumeText}
     const result = await model.generateContent(prompt);
 
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+
+    return text;
 
   } catch (error) {
     console.error("GEMINI ERROR:", error);
 
-    // fallback (IMPORTANT for production)
+    // ✅ SAFE FALLBACK (NEVER BREAK FRONTEND)
     return `
 1. Tell me about your projects
 2. What technologies do you use?
