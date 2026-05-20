@@ -2,15 +2,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
 
-if (!apiKey) {
-  console.log("❌ GEMINI API KEY NOT FOUND");
-}
-
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// ✅ FIXED MODEL
+// ✅ USE STABLE MODEL
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro",
+  model: "gemini-1.5-flash-latest",
 });
 
 export const generateQuestions = async (resumeText, role) => {
@@ -18,7 +14,7 @@ export const generateQuestions = async (resumeText, role) => {
     const prompt = `
 You are a technical interviewer.
 
-Generate 8 interview questions.
+Generate 8 UNIQUE interview questions for:
 
 Role: ${role}
 
@@ -26,25 +22,22 @@ Resume:
 ${resumeText}
 
 Rules:
-- Numbered list only
+- Return ONLY numbered list
+- Mix:
+  1. Technical
+  2. Projects
+  3. Problem solving
+  4. Real-world scenarios
 - No repetition
-- Mix technical, project, and problem solving
 `;
 
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    const text = result.response.text();
+
+    return text;
   } catch (error) {
     console.log("❌ GEMINI ERROR:", error.message);
 
-    return `
-1. Explain your project architecture
-2. What tech stack did you use?
-3. What challenges did you face?
-4. How do you optimize APIs?
-5. Explain your role in team projects
-6. How do you handle debugging?
-7. What is your strongest project?
-8. Why should we hire you?
-`;
+    return null; // IMPORTANT: let fallback handle it
   }
 };
