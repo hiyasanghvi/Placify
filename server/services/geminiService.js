@@ -8,9 +8,9 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// IMPORTANT: correct model (latest stable)
+// ✅ FIXED MODEL (IMPORTANT)
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-pro",
 });
 
 export const generateQuestions = async (resumeText, role) => {
@@ -18,7 +18,7 @@ export const generateQuestions = async (resumeText, role) => {
     const prompt = `
 You are a technical interviewer.
 
-Generate 8 DIFFERENT interview questions (IMPORTANT: not 3, not repetitive).
+Generate 8 interview questions.
 
 Role: ${role}
 
@@ -26,31 +26,23 @@ Resume:
 ${resumeText}
 
 Rules:
-- Return ONLY numbered list
-- Make questions diverse:
-  * technical
-  * project-based
-  * problem solving
-  * real-world scenarios
+- Only numbered list
 - No duplicates
+- Mix technical + project + problem solving
 `;
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    return text;
-
+    return result.response.text();
   } catch (error) {
     console.log("❌ GEMINI ERROR:", error.message);
 
-    // FINAL FALLBACK (never fails)
     return `
 1. Explain your project architecture
 2. What tech stack did you use?
 3. What challenges did you face?
 4. How do you optimize APIs?
 5. Explain your role in team projects
-6. How do you handle debugging?
+6. How do you debug issues?
 7. What is your strongest project?
 8. Why should we hire you?
 `;
