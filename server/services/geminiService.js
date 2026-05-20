@@ -2,20 +2,17 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function listModels() {
-  const models = await genAI.listModels();
-  console.log(models);
-}
-
-listModels();
-
+// SAFE MODEL (works almost everywhere)
+const model = genAI.getGenerativeModel({
+  model: "gemini-pro",
+});
 
 export const generateQuestions = async (resumeText, role) => {
   try {
     const prompt = `
 You are a technical interviewer.
 
-Generate 8 UNIQUE interview questions for:
+Generate 8 diverse interview questions for:
 
 Role: ${role}
 
@@ -23,22 +20,15 @@ Resume:
 ${resumeText}
 
 Rules:
-- Return ONLY numbered list
-- Mix:
-  1. Technical
-  2. Projects
-  3. Problem solving
-  4. Real-world scenarios
-- No repetition
+- Only numbered list
+- Mix technical + HR + projects + problem solving
 `;
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    return result.response.text();
 
-    return text;
-  } catch (error) {
-    console.log("❌ GEMINI ERROR:", error.message);
-
-    return null; // IMPORTANT: let fallback handle it
+  } catch (err) {
+    console.log("❌ GEMINI ERROR:", err.message);
+    return null;
   }
 };
