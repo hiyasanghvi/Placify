@@ -147,11 +147,11 @@ router.post(
         aiQuestionsRaw
       );
 
-      const aiQuestions = aiQuestionsRaw
-        ? aiQuestionsRaw
-            .split("\n")
-            .filter((q) => q.trim() !== "")
-        : [];
+      const aiQuestions = [
+  "Tell me about yourself",
+  "Explain your project",
+  "Why this role?"
+];
 
       console.log(
         "AI QUESTIONS COUNT:",
