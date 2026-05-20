@@ -147,11 +147,28 @@ router.post(
         aiQuestionsRaw
       );
 
-      const aiQuestions = [
-  "Tell me about yourself",
-  "Explain your project",
-  "Why this role?"
-];
+      let aiQuestions = [];
+
+if (aiQuestionsRaw) {
+  aiQuestions = aiQuestionsRaw
+    .split("\n")
+    .map(q => q.replace(/^\d+\.\s*/, "").trim())
+    .filter(q => q.length > 5);
+}
+
+// fallback safety
+if (aiQuestions.length < 5) {
+  aiQuestions = [
+    "Tell me about your project",
+    "What technologies did you use?",
+    "Explain a challenge you solved",
+    "How do you handle APIs?",
+    "Why should we hire you?",
+    "What is your strongest skill?",
+    "Explain system design basics",
+    "How do you debug issues?"
+  ];
+}
 
       console.log(
         "AI QUESTIONS COUNT:",
