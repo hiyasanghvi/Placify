@@ -105,15 +105,15 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     const resumeText = text.toLowerCase();
 
     /* ==============================
-       GEMINI QUESTIONS (AI)
+       AI QUESTIONS (GEMINI)
     ============================== */
     let aiQuestions = [];
 
     try {
-      const aiQuestionsRaw = await generateQuestions(text, role);
+      const raw = await generateQuestions(text, role);
 
-      if (aiQuestionsRaw) {
-        aiQuestions = aiQuestionsRaw
+      if (raw) {
+        aiQuestions = raw
           .split("\n")
           .map((q) => q.replace(/^\d+\.\s*/, "").trim())
           .filter((q) => q.length > 5);
@@ -122,7 +122,6 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
       console.log("AI ERROR:", err.message);
     }
 
-    // fallback AI questions
     if (aiQuestions.length < 5) {
       aiQuestions = [
         "Tell me about your project architecture",
@@ -130,23 +129,23 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
         "What challenges did you face?",
         "How do you optimize APIs?",
         "Explain your role in team projects",
-        "How do you handle debugging issues?",
+        "How do you handle debugging?",
         "What is your strongest project?",
         "Why should we hire you?",
       ];
     }
 
     /* ==============================
-       1️⃣ KEYWORD SCORE (40%)
+       1. KEYWORD SCORE (40%)
     ============================== */
     const keywords = jobKeywords[role.toLowerCase()];
 
     let matched = [];
     let missing = [];
 
-    keywords.forEach((keyword) => {
-      if (resumeText.includes(keyword)) matched.push(keyword);
-      else missing.push(keyword);
+    keywords.forEach((k) => {
+      if (resumeText.includes(k)) matched.push(k);
+      else missing.push(k);
     });
 
     const keywordScore = Math.round(
@@ -154,9 +153,9 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     );
 
     /* ==============================
-       2️⃣ STRUCTURE SCORE (20%)
+       2. STRUCTURE SCORE (20%)
     ============================== */
-    const sectionPatterns = {
+    const sections = {
       summary: /summary|profile|objective/i,
       experience: /experience|work history/i,
       education: /education|qualification/i,
@@ -164,48 +163,39 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
       projects: /projects|portfolio/i,
     };
 
-    const foundSections = Object.keys(sectionPatterns).filter((key) =>
-      sectionPatterns[key].test(text)
+    const foundSections = Object.keys(sections).filter((k) =>
+      sections[k].test(text)
     );
 
     const structureScore = Math.round(
-      (foundSections.length / Object.keys(sectionPatterns).length) * 20
+      (foundSections.length / Object.keys(sections).length) * 20
     );
 
     /* ==============================
-       3️⃣ IMPACT SCORE (20%)
+       3. IMPACT SCORE (20%)
     ============================== */
-    const metricsMatches = text.match(/\d+%|\d+\+?|\$\d+/g) || [];
+    const metrics = text.match(/\d+%|\d+\+?|\$\d+/g) || [];
 
-    let impactScore = 0;
-
-    if (metricsMatches.length >= 5) {
-      impactScore = 20;
-    } else {
-      impactScore = metricsMatches.length * 4;
-    }
+    const impactScore =
+      metrics.length >= 5 ? 20 : metrics.length * 4;
 
     /* ==============================
-       4️⃣ FORMATTING SCORE (10%)
+       4. FORMATTING SCORE (10%)
     ============================== */
     const wordCount = text.split(/\s+/).length;
 
     let formattingScore = 3;
 
-    if (wordCount >= 300 && wordCount <= 800) {
-      formattingScore = 10;
-    } else if (wordCount >= 200) {
-      formattingScore = 6;
-    }
+    if (wordCount >= 300 && wordCount <= 800) formattingScore = 10;
+    else if (wordCount >= 200) formattingScore = 6;
 
     /* ==============================
-       5️⃣ CONTACT SCORE (10%)
+       5. CONTACT SCORE (10%)
     ============================== */
     const emailRegex = /\S+@\S+\.\S+/;
     const phoneRegex = /\d{10}/;
 
     let contactScore = 0;
-
     if (emailRegex.test(text)) contactScore += 5;
     if (phoneRegex.test(text)) contactScore += 5;
 
@@ -220,14 +210,13 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
       contactScore;
 
     /* ==============================
-       ISSUE DETECTION + IMPROVEMENTS
+       ISSUES + IMPROVEMENTS
     ============================== */
     const issues = [];
     const improvements = [];
 
-    // missing sections
     if (foundSections.length < 4) {
-      issues.push("Important resume sections missing");
+      issues.push("Missing important resume sections");
       improvements.push({
         title: "Improve Resume Structure",
         solution:
@@ -235,75 +224,32 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
       });
     }
 
-    // metrics
-    if (metricsMatches.length < 3) {
+    if (metrics.length < 3) {
       issues.push("Lack of measurable achievements");
       improvements.push({
-        title: "Add Quantifiable Results",
+        title: "Add Quantifiable Metrics",
         solution:
-          "Add metrics like 'Improved performance by 30%' or 'Reduced latency by 40%'.",
+          "Add numbers like 'Improved performance by 30%' or 'Reduced cost by 20%'.",
       });
     }
 
-    // weak verbs
     const weakWords = ["responsible for", "worked on", "helped", "handled"];
-
-    const weakMatches = weakWords.filter((w) =>
-      resumeText.includes(w)
-    );
-
-    if (weakMatches.length > 0) {
+    if (weakWords.some((w) => resumeText.includes(w))) {
       issues.push("Weak action verbs detected");
       improvements.push({
         title: "Use Strong Action Verbs",
         solution:
-          "Replace weak phrases with: Developed, Designed, Optimized, Led, Engineered.",
+          "Use words like Developed, Designed, Optimized, Led, Engineered.",
       });
     }
 
-    // generic words
-    const genericWords = [
-      "hardworking",
-      "team player",
-      "quick learner",
-      "dedicated",
-    ];
-
-    const genericMatches = genericWords.filter((w) =>
-      resumeText.includes(w)
-    );
-
-    if (genericMatches.length > 0) {
+    const genericWords = ["hardworking", "team player", "quick learner"];
+    if (genericWords.some((w) => resumeText.includes(w))) {
       issues.push("Generic buzzwords detected");
       improvements.push({
         title: "Avoid Generic Words",
         solution:
-          "Show skills through achievements instead of buzzwords like 'hardworking'.",
-      });
-    }
-
-    // duplicates
-    const lines = text
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 20);
-
-    const freq = {};
-
-    lines.forEach((line) => {
-      freq[line] = (freq[line] || 0) + 1;
-    });
-
-    const duplicateLines = Object.keys(freq).filter(
-      (l) => freq[l] > 1
-    );
-
-    if (duplicateLines.length > 0) {
-      issues.push("Duplicate content found");
-      improvements.push({
-        title: "Remove Repetition",
-        solution:
-          "Avoid repeating same responsibilities in multiple sections.",
+          "Replace buzzwords with real achievements and measurable results.",
       });
     }
 
@@ -319,12 +265,16 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     console.log("ATS SUCCESS");
 
     /* ==============================
-       RESPONSE
+       FINAL RESPONSE (UI READY)
     ============================== */
     res.json({
-      overallScore,
-      level,
-      aiQuestions,
+      success: true,
+
+      summary: {
+        overallScore,
+        level,
+        wordCount,
+      },
 
       breakdown: {
         keywords: keywordScore,
@@ -334,19 +284,35 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
         contactInfo: contactScore,
       },
 
-      matchedKeywords: matched,
-      missingKeywords: missing,
+      keywords: {
+        matched,
+        missing,
+      },
 
-      issues,
-      improvements,
+      issues: issues.map((i, index) => ({
+        id: index + 1,
+        title: i,
+      })),
 
-      wordCount,
+      improvements: improvements.map((i, index) => ({
+        id: index + 1,
+        title: i.title,
+        description: i.solution,
+        priority:
+          i.title.includes("Structure") ||
+          i.title.includes("Metrics")
+            ? "High"
+            : "Medium",
+      })),
+
+      aiQuestions,
     });
   } catch (error) {
     console.log("========== ATS ERROR ==========");
     console.log(error.message);
 
     res.status(500).json({
+      success: false,
       message: "ATS analysis failed",
       error: error.message,
     });
