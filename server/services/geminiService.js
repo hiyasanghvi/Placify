@@ -4,9 +4,8 @@ console.log("GEMINI KEY EXISTS:", !!process.env.GEMINI_API_KEY);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// IMPORTANT FIX HERE 👇
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest",
+  model: "gemini-1.5-flash",
 });
 
 export const generateQuestions = async (resumeText, role) => {
@@ -14,15 +13,14 @@ export const generateQuestions = async (resumeText, role) => {
     const prompt = `
 You are a technical interviewer.
 
-Generate 5 personalized interview questions based on this resume.
+Generate 5 interview questions based on this resume.
 
 Focus on:
 - projects
 - technologies
-- practical implementation
 - ${role} role
 
-Return ONLY questions as numbered list.
+Return ONLY numbered questions.
 
 Resume:
 ${resumeText}
@@ -31,8 +29,16 @@ ${resumeText}
     const result = await model.generateContent(prompt);
 
     return result.response.text();
-  } catch (err) {
-    console.error("GEMINI ERROR:", err);
-    return "1. Tell me about your project\n2. What technologies did you use?";
+
+  } catch (error) {
+    console.error("GEMINI ERROR:", error);
+
+    return `
+1. Tell me about your projects
+2. What technologies do you use?
+3. Explain a challenge you solved
+4. How do you handle APIs?
+5. Why should we hire you?
+`;
   }
 };
