@@ -1,73 +1,58 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-console.log("GEMINI KEY EXISTS:", !!process.env.GEMINI_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+if (!apiKey) {
+  console.log("❌ GEMINI API KEY NOT FOUND");
+}
 
-/* ==============================
-   MODEL LOADER WITH FALLBACK
-============================== */
-const getModel = () => {
-  try {
-    // ✅ Primary model (best balance)
-    return genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-    });
-  } catch (err1) {
-    console.error("Flash model failed, switching to pro...");
+const genAI = new GoogleGenerativeAI(apiKey);
 
-    try {
-      // 🔁 Backup model
-      return genAI.getGenerativeModel({
-        model: "gemini-1.5-pro",
-      });
-    } catch (err2) {
-      console.error("All Gemini models failed!");
-      throw new Error("No Gemini model available");
-    }
-  }
-};
+// IMPORTANT: correct model (latest stable)
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+});
 
-const model = getModel();
-
-/* ==============================
-   MAIN FUNCTION
-============================== */
 export const generateQuestions = async (resumeText, role) => {
   try {
     const prompt = `
 You are a technical interviewer.
 
-Generate 5 interview questions based on this resume.
+Generate 8 DIFFERENT interview questions (IMPORTANT: not 3, not repetitive).
 
-Focus on:
-- projects
-- technologies
-- ${role} role
-
-Return ONLY numbered questions.
+Role: ${role}
 
 Resume:
 ${resumeText}
+
+Rules:
+- Return ONLY numbered list
+- Make questions diverse:
+  * technical
+  * project-based
+  * problem solving
+  * real-world scenarios
+- No duplicates
 `;
 
     const result = await model.generateContent(prompt);
-
-    const response = await result.response;
-    const text = response.text();
+    const text = result.response.text();
 
     return text;
 
   } catch (error) {
-    console.error("GEMINI ERROR:", error);
+    console.log("❌ GEMINI ERROR:", error.message);
 
-    // ✅ SAFE FALLBACK (NEVER BREAK FRONTEND)
+    // FINAL FALLBACK (never fails)
     return `
-1. Tell me about your projects
-2. What technologies do you use?
-3. Explain a challenge you solved
-4. How do you handle APIs?
-5. Why should we hire you?
+1. Explain your project architecture
+2. What tech stack did you use?
+3. What challenges did you face?
+4. How do you optimize APIs?
+5. Explain your role in team projects
+6. How do you handle debugging?
+7. What is your strongest project?
+8. Why should we hire you?
 `;
   }
 };
