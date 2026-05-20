@@ -1,13 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const genAI = new GoogleGenerativeAI(apiKey);
+async function listModels() {
+  const models = await genAI.listModels();
+  console.log(models);
+}
 
-// ✅ USE STABLE MODEL
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest",
-});
+listModels();
+
 
 export const generateQuestions = async (resumeText, role) => {
   try {
