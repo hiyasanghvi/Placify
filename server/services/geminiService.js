@@ -4,8 +4,9 @@ console.log("GEMINI KEY EXISTS:", !!process.env.GEMINI_API_KEY);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// ✅ CORRECT MODEL (IMPORTANT)
 const model = genAI.getGenerativeModel({
-  model: "gemini-pro",
+  model: "gemini-1.5-flash",
 });
 
 export const generateQuestions = async (resumeText, role) => {
@@ -28,11 +29,13 @@ ${resumeText}
 
     const result = await model.generateContent(prompt);
 
-    return result.response.text();
+    const response = await result.response;
+    return response.text();
 
   } catch (error) {
     console.error("GEMINI ERROR:", error);
 
+    // fallback (IMPORTANT for production)
     return `
 1. Tell me about your projects
 2. What technologies do you use?
